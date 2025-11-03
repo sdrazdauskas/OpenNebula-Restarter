@@ -27,22 +27,21 @@ if [ ! -f /etc/opennebula-watcher/config ]; then
     cat > /etc/opennebula-watcher/config << 'EOF'
 # OpenNebula VM Watcher Configuration
 
-# OpenNebula authentication
-# Option 1: Path to authentication file
-# Example: ONE_AUTH="/var/lib/one/.one/one_auth"
-# Option 2: Direct credentials (username:password)
-# Example: ONE_AUTH="oneadmin:mypassword"
-# Option 3: Authentication token (username:token)
-# Example: ONE_AUTH="oneadmin:a1b2c3d4e5f6..."
-# To create a token, run: oneuser token-create <username> --time <seconds>
-ONE_AUTH=""
+# OpenNebula username
+# Example: ONE_USER="oneadmin"
+ONE_USER=""
+
+# OpenNebula password or token
+# Example: ONE_PASSWORD="mypassword"
+# Or use a token created with: oneuser token-create <username> --time <seconds>
+ONE_PASSWORD=""
 
 # OpenNebula XML-RPC endpoint
-# Example: ONE_XMLRPC="http://localhost:2633/RPC2"
-ONE_XMLRPC=""
+# Example: ONE_ENDPOINT="http://localhost:2633/RPC2"
+ONE_ENDPOINT=""
 
 # VM ID to monitor
-# Get this by running: onevm list
+# Get this by running: onevm list --user <username> --password <password> --endpoint <endpoint>
 VM_ID=""
 
 # Enable verbose logging (optional)

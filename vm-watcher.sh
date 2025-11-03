@@ -8,6 +8,11 @@ CONFIG_FILE="/etc/opennebula-watcher/config"
 LOG_FILE="/var/log/opennebula-watcher.log"
 CHECK_INTERVAL=60  # Check every 60 seconds
 
+# Global variables for authentication
+ONE_USER=""
+ONE_PASSWORD=""
+ONE_ENDPOINT=""
+
 # Function to log messages
 log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
@@ -22,41 +27,23 @@ load_config() {
     
     source "$CONFIG_FILE"
     
-    if [ -z "$ONE_AUTH" ] || [ -z "$ONE_XMLRPC" ] || [ -z "$VM_ID" ]; then
-        log_message "ERROR: Missing required configuration. Please set ONE_AUTH, ONE_XMLRPC, and VM_ID"
+    if [ -z "$ONE_USER" ] || [ -z "$ONE_PASSWORD" ] || [ -z "$ONE_ENDPOINT" ] || [ -z "$VM_ID" ]; then
+        log_message "ERROR: Missing required configuration. Please set ONE_USER, ONE_PASSWORD, ONE_ENDPOINT, and VM_ID"
         exit 1
     fi
-    
-    # Check if ONE_AUTH is a file path or direct credentials
-    if [ -f "$ONE_AUTH" ]; then
-        # It's a file path, use it as is
-        export ONE_AUTH
-    else
-        # It's direct credentials (username:password or username:token)
-        # Create a temporary auth file for this session
-        local temp_auth_file="/tmp/opennebula-watcher-$$.auth"
-        echo "$ONE_AUTH" > "$temp_auth_file"
-        chmod 600 "$temp_auth_file"
-        export ONE_AUTH="$temp_auth_file"
-        
-        # Set up cleanup on exit
-        trap "rm -f $temp_auth_file" EXIT
-    fi
-    
-    export ONE_XMLRPC
 }
 
 # Function to get VM state
 get_vm_state() {
     local vm_id=$1
-    local state=$(onevm show "$vm_id" --xml | grep -oP '(?<=<STATE>)[^<]+' | head -1)
+    local state=$(onevm show "$vm_id" --user "$ONE_USER" --password "$ONE_PASSWORD" --endpoint "$ONE_ENDPOINT" --xml | grep -oP '(?<=<STATE>)[^<]+' | head -1)
     echo "$state"
 }
 
 # Function to get VM LCM state (more detailed state)
 get_vm_lcm_state() {
     local vm_id=$1
-    local lcm_state=$(onevm show "$vm_id" --xml | grep -oP '(?<=<LCM_STATE>)[^<]+' | head -1)
+    local lcm_state=$(onevm show "$vm_id" --user "$ONE_USER" --password "$ONE_PASSWORD" --endpoint "$ONE_ENDPOINT" --xml | grep -oP '(?<=<LCM_STATE>)[^<]+' | head -1)
     echo "$lcm_state"
 }
 
@@ -71,14 +58,15 @@ restart_vm() {
     if [ "$current_state" = "5" ]; then
         # State 5 = SUSPENDED
         log_message "Resuming suspended VM $vm_id..."
-        onevm resume "$vm_id"
+        onevm resume "$vm_id" --user "$ONE_USER" --password "$ONE_PASSWORD" --endpoint "$ONE_ENDPOINT"
     elif [ "$current_state" = "4" ] || [ "$current_state" = "6" ] || [ "$current_state" = "8" ]; then
         # State 4 = STOPPED, 6 = DONE, 8 = POWEROFF
         log_message "Restarting stopped VM $vm_id..."
-        onevm resume "$vm_id" 2>/dev/null || onevm restart "$vm_id"
+        onevm resume "$vm_id" --user "$ONE_USER" --password "$ONE_PASSWORD" --endpoint "$ONE_ENDPOINT" 2>/dev/null || \
+        onevm restart "$vm_id" --user "$ONE_USER" --password "$ONE_PASSWORD" --endpoint "$ONE_ENDPOINT"
     else
         log_message "VM $vm_id in unexpected state $current_state, attempting generic restart..."
-        onevm restart "$vm_id"
+        onevm restart "$vm_id" --user "$ONE_USER" --password "$ONE_PASSWORD" --endpoint "$ONE_ENDPOINT"
     fi
     
     if [ $? -eq 0 ]; then
