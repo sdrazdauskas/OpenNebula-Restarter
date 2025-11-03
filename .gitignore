@@ -1,0 +1,16 @@
+# Configuration files with credentials
+config
+*.auth
+
+# Log files
+*.log
+
+# Backup files
+*~
+*.bak
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
