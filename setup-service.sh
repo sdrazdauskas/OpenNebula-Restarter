@@ -27,9 +27,14 @@ if [ ! -f /etc/opennebula-watcher/config ]; then
     cat > /etc/opennebula-watcher/config << 'EOF'
 # OpenNebula VM Watcher Configuration
 
-# OpenNebula authentication file path
-# Format: username:password
+# OpenNebula authentication
+# Option 1: Path to authentication file
 # Example: ONE_AUTH="/var/lib/one/.one/one_auth"
+# Option 2: Direct credentials (username:password)
+# Example: ONE_AUTH="oneadmin:mypassword"
+# Option 3: Authentication token (username:token)
+# Example: ONE_AUTH="oneadmin:a1b2c3d4e5f6..."
+# To create a token, run: oneuser token-create <username> --time <seconds>
 ONE_AUTH=""
 
 # OpenNebula XML-RPC endpoint

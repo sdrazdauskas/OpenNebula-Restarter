@@ -27,7 +27,22 @@ load_config() {
         exit 1
     fi
     
-    export ONE_AUTH
+    # Check if ONE_AUTH is a file path or direct credentials
+    if [ -f "$ONE_AUTH" ]; then
+        # It's a file path, use it as is
+        export ONE_AUTH
+    else
+        # It's direct credentials (username:password or username:token)
+        # Create a temporary auth file for this session
+        local temp_auth_file="/tmp/opennebula-watcher-$$.auth"
+        echo "$ONE_AUTH" > "$temp_auth_file"
+        chmod 600 "$temp_auth_file"
+        export ONE_AUTH="$temp_auth_file"
+        
+        # Set up cleanup on exit
+        trap "rm -f $temp_auth_file" EXIT
+    fi
+    
     export ONE_XMLRPC
 }
 
