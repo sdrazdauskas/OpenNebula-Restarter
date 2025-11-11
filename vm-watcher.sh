@@ -108,8 +108,8 @@ check_vm() {
                 log_message "VM $vm_id is running (state: ACTIVE)"
             fi
             ;;
-        4|5|6|8)
-            # VM is STOPPED, SUSPENDED, DONE, or POWEROFF - needs restart
+        4|5|6|8|9)
+            # VM is STOPPED, SUSPENDED, DONE, POWEROFF, or UNDEPLOYED - needs restart
             log_message "WARNING: VM $vm_id is not running (state: $state)"
             restart_vm "$vm_id" "$state"
             ;;
