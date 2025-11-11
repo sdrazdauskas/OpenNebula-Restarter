@@ -54,20 +54,9 @@ restart_vm() {
     
     log_message "VM $vm_id is in state $current_state. Attempting to restart..."
     
-    # Try to resume if suspended, otherwise try to restart
-    if [ "$current_state" = "5" ]; then
-        # State 5 = SUSPENDED
-        log_message "Resuming suspended VM $vm_id..."
-        onevm resume "$vm_id" --user "$ONE_USER" --password "$ONE_PASSWORD" --endpoint "$ONE_ENDPOINT"
-    elif [ "$current_state" = "4" ] || [ "$current_state" = "6" ] || [ "$current_state" = "8" ]; then
-        # State 4 = STOPPED, 6 = DONE, 8 = POWEROFF
-        log_message "Restarting stopped VM $vm_id..."
-        onevm resume "$vm_id" --user "$ONE_USER" --password "$ONE_PASSWORD" --endpoint "$ONE_ENDPOINT" 2>/dev/null || \
-        onevm restart "$vm_id" --user "$ONE_USER" --password "$ONE_PASSWORD" --endpoint "$ONE_ENDPOINT"
-    else
-        log_message "VM $vm_id in unexpected state $current_state, attempting generic restart..."
-        onevm restart "$vm_id" --user "$ONE_USER" --password "$ONE_PASSWORD" --endpoint "$ONE_ENDPOINT"
-    fi
+    # Try to resume the VM - OpenNebula's resume command works for SUSPENDED, UNDEPLOYED, STOPPED, POWEROFF states
+    log_message "Resuming VM $vm_id from state $current_state..."
+    onevm resume "$vm_id" --user "$ONE_USER" --password "$ONE_PASSWORD" --endpoint "$ONE_ENDPOINT"
     
     if [ $? -eq 0 ]; then
         log_message "Successfully triggered restart for VM $vm_id"
